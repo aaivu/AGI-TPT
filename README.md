@@ -28,7 +28,7 @@ The total loss is `L_TPT + λ·L_AGI` with **λ = 4** for every dataset, backbon
 git clone https://github.com/aaivu/AGI-TPT.git
 cd AGI-TPT
 conda env create -f environment.yml
-conda activate ctpt
+conda activate agitpt
 pip install relplot   # optional: smooth ECE
 ```
 

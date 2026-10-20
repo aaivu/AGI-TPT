@@ -344,8 +344,9 @@ def run(args):
     sm = metrics.smooth_ece(confs, correct)
     res['smooth_ece'] = None if sm is None else 100 * sm
     if args.setting == 'online':
-        res['spearman_rs'] = metrics.spearman_structure(T0, T_end)
-        res['jaccard'] = metrics.jaccard_at_k(T0, T_end, k=3 if N <= 10 else 10)
+        if N <= 5000:   # N x N structure measures; skipped for the large ImageNet-21k subsets
+            res['spearman_rs'] = metrics.spearman_structure(T0, T_end)
+            res['jaccard'] = metrics.jaccard_at_k(T0, T_end, k=3 if N <= 10 else 10)
         res['absorbed_classes'] = metrics.absorbed_classes(preds, labels)
     if ad.reg is not None and ad.reg.half is not None:
         half = ad.reg.half.cpu().numpy()

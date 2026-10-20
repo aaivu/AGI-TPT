@@ -87,6 +87,10 @@ def build_extra_dataset(set_id, transform, data_root, mode='test', classnames_fi
         return ds, ds.classes
     if set_id == 'fer2013':
         ds = datasets.FER2013(data_root, split='train' if train else 'test', transform=ToRGB(transform))
+        # the Kaggle test.csv has no labels; torchvision then returns target None
+        if ds._samples and ds._samples[0][1] is None:
+            raise ValueError("FER-2013 test.csv has no 'emotion' column: use a labelled test file "
+                             "(e.g. the PublicTest+PrivateTest rows of fer2013.csv) as fer2013/test.csv")
         return ds, FER2013_CLASSES
     if set_id == 'in21k':
         assert classnames_file is not None, "--classnames_file is required for in21k"
