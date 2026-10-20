@@ -1,7 +1,7 @@
 # AGI-TPT: Adaptive Geometry-Informed Test-Time Prompt Tuning
 
 Code for *AGI-TPT: Adaptive Geometry-Informed Test-Time Prompt Tuning for Calibrated
-Zero-Shot Vision-Language Models* (under review, ICLR 2027).
+Zero-Shot Vision-Language Models*.
 
 Test-time prompt tuning (TPT) adapts CLIP to each test image by lowering the entropy of
 its prediction. This raises accuracy but makes the model over-confident, and when the
