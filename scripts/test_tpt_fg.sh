@@ -1,13 +1,5 @@
 #!/bin/bash
-
-data_root='put your dataset path here'
-testsets=$1
-#arch=RN50
-arch=ViT-B/16
-bs=64
-ctx_init=a_photo_of_a
-run_type=tpt
-
-python ./tpt_classification.py ${data_root} --test_sets ${testsets} \
--a ${arch} -b ${bs} --gpu 0 \
---tpt --ctx_init ${ctx_init} --run_type ${run_type} \
+# TPT (no regularizer), episodic, 5 seeds. Fine-grained datasets.
+# bash scripts/test_tpt_fg.sh {dataset}
+source "$(dirname "$0")/common.sh"
+for seed in 0 1 2 3 4; do run $1 --reg none --setting episodic --seed ${seed}; done

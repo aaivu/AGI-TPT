@@ -1,14 +1,6 @@
 #!/bin/bash
-
-data_root='./data_root/'
-testsets=$1
-#arch=RN50
-arch=ViT-B/16
-bs=64
-ctx_init=a_photo_of_a
-run_type=tpt_ctpt
-lambda_term=100
-
-python ./tpt_classification.py ${data_root} --test_sets ${testsets} \
--a ${arch} -b ${bs} --gpu 0 \
---tpt --ctx_init ${ctx_init} --run_type ${run_type} --lambda_term ${lambda_term} \
+# C-TPT re-implementation (written objective, appendix D.2) at its published weight 50.
+# Published C-TPT numbers in table 1 are copied from Yoon et al. (2024), not from this script.
+# bash scripts/test_tpt_ctpt_fg.sh {dataset}
+source "$(dirname "$0")/common.sh"
+for seed in 0 1 2 3 4; do run $1 --reg ctpt --lam 50 --setting episodic --seed ${seed}; done

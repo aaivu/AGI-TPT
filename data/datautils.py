@@ -44,10 +44,61 @@ distortions = ['gaussian_noise', 'shot_noise', 'impulse_noise',
                 'pixelate','fog','speckle_noise','saturate', 'spatter', 'gaussian_blur']
 
 
+FER2013_CLASSES = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
+# datasets added for AGI-TPT (level tests on N = 7, 10; lambda selection on CIFAR-100)
+EXTRA_SETS = ['cifar10', 'cifar100', 'stl10', 'fer2013', 'in21k']
+
+
+class ToRGB(object):
+    """Wrap a transform so grayscale images (FER-2013) enter as RGB."""
+    def __init__(self, transform):
+        self.transform = transform
+
+    def __call__(self, x):
+        return self.transform(x.convert('RGB'))
+
+
+class ImageFolderSubset(datasets.ImageFolder):
+    """ImageNet-21k class subset (appendix G.8): an ImageFolder of wnid folders and a
+    `classnames_file` with lines 'wnid<TAB>class name'; only listed wnids are kept."""
+    def __init__(self, root, classnames_file, transform=None):
+        with open(classnames_file) as fp:
+            pairs = [l.rstrip('\n').split('\t', 1) for l in fp if l.strip()]
+        self.wnid_to_name = dict(pairs)
+        super().__init__(root, transform=transform)
+
+    def find_classes(self, directory):
+        classes = sorted(w for w in self.wnid_to_name if os.path.isdir(os.path.join(directory, w)))
+        return classes, {c: i for i, c in enumerate(classes)}
+
+
+def build_extra_dataset(set_id, transform, data_root, mode='test', classnames_file=None):
+    """Returns (dataset, classnames) for the sets in EXTRA_SETS."""
+    train = (mode == 'train')
+    if set_id == 'cifar10':
+        ds = datasets.CIFAR10(os.path.join(data_root, 'cifar10'), train=train, transform=transform, download=False)
+        return ds, ds.classes
+    if set_id == 'cifar100':
+        ds = datasets.CIFAR100(os.path.join(data_root, 'cifar100'), train=train, transform=transform, download=False)
+        return ds, ds.classes
+    if set_id == 'stl10':
+        ds = datasets.STL10(os.path.join(data_root, 'stl10'), split='train' if train else 'test',
+                            transform=transform, download=False)
+        return ds, ds.classes
+    if set_id == 'fer2013':
+        ds = datasets.FER2013(data_root, split='train' if train else 'test', transform=ToRGB(transform))
+        return ds, FER2013_CLASSES
+    if set_id == 'in21k':
+        assert classnames_file is not None, "--classnames_file is required for in21k"
+        ds = ImageFolderSubset(os.path.join(data_root, 'imagenet21k'), classnames_file, transform)
+        return ds, [ds.wnid_to_name[w] for w in ds.classes]
+    raise NotImplementedError(set_id)
+
+
 def build_dataset(set_id, transform, data_root, mode='test', n_shot=None, split="all", bongard_anno=False):
     if set_id == 'I':
-        # ImageNet validation set
-        testdir = os.path.join(os.path.join(data_root, ID_to_DIRNAME[set_id]), 'val')
+        # ImageNet validation set (train split only for the equal-strength calibration)
+        testdir = os.path.join(os.path.join(data_root, ID_to_DIRNAME[set_id]), 'train' if mode == 'train' else 'val')
         testset = datasets.ImageFolder(testdir, transform=transform)
     elif set_id in ['A', 'K', 'R', 'V']:
         testdir = os.path.join(data_root, ID_to_DIRNAME[set_id])
